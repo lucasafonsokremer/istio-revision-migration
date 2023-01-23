@@ -4,8 +4,8 @@ Istio: Upgrading Istio without revision to fully revisioned control plane
 
 ## Istio Direct Upgrades and Revision
 
-[Direct upgrades](https://istio.io/latest/blog/2021/direct-upgrade/)
-[Revision](https://istio.io/latest/blog/2021/revision-tags/)
+- [Direct upgrades](https://istio.io/latest/blog/2021/direct-upgrade/)
+- [Revision](https://istio.io/latest/blog/2021/revision-tags/)
 
 
 ## Install (Lab Only)
@@ -166,7 +166,7 @@ curl -s -I -HHost:httpbin.example.com "http://$INGRESS_HOST:$INGRESS_PORT/status
 
 ## Migrate to fully revisioned control plane (no downtime required for upgrades)
 
-[Github Issue](https://github.com/istio/istio/issues/40702)
+- [Github Issue](https://github.com/istio/istio/issues/40702)
 
 ## Install new release
 
