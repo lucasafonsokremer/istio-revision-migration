@@ -67,12 +67,6 @@ kubectl create namespace demoapp ; kubectl label namespace demoapp istio-injecti
 kubectl -n demoapp apply -f https://raw.githubusercontent.com/istio/istio/master/samples/bookinfo/platform/kube/bookinfo.yaml
 ```
 
-### Output
-
-```
-
-```
-
 ### Instalando o MetalLB para criar um serviço do tipo LoadBalancer
 
 - Destinado à ambientes onpremise
@@ -90,7 +84,7 @@ kubectl create secret generic -n metallb-system memberlist --from-literal=secret
 ```
 
 ```
-cat <<EOF | kubectl apply -n istio-system -f -
+cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -118,3 +112,5 @@ kubectl create -n demoapp -f https://raw.githubusercontent.com/istio/istio/maste
 IP=$(kubectl -n istio-system get svc istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 curl -I $IP/productpage
 ```
+
+### Output
