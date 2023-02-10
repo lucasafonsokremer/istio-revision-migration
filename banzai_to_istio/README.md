@@ -1,4 +1,33 @@
-# Migrar do Banzaioperator para istio operator
+# Migrar do Banzaioperator para istio operator com Zero Downtime
+
+## Links Importantes
+
+- [Advanced canary Upgrade](https://istio.io/latest/docs/setup/additional-setup/gateway/#canary-upgrade-advanced)
+- [Gateway Operator Upgrade](https://istio.io/v1.11/docs/setup/upgrade/gateways/#upgrade-with-operator)
+- [Habilitar Jaeger de testes](https://istio.io/latest/docs/ops/integrations/jaeger/)
+- [Habilitar Prometheus de testes](https://istio.io/latest/docs/ops/integrations/prometheus/)
+
+## Possíveis Debugs
+
+- Validar configurações do control plane
+
+```
+kubectl get configmap -n istio-system istio-1-14-6 -o yaml
+```
+
+- Validar PILOT TRACE
+
+```
+kubectl -n istio-system get  deployment  istiod-1-14-6 -o yaml | grep  -A 2 'name: PILOT_TRACE_SAMPLING'
+```
+
+- Port Forward do Jaeger
+
+```
+kubectl port-forward svc/tracing 80:80 -n istio-system --address=0.0.0.0 &
+```
+
+
 
 ## Instalando e configurando o ambiente com Banzaioperator
 
@@ -140,4 +169,43 @@ ratings-v1-f849dc6d-99fdl.demoapp                                  SYNCED     SY
 reviews-v1-74fb8fdbd8-n5sw4.demoapp                                SYNCED     SYNCED     SYNCED     SYNCED     NOT SENT     istiod-5c8f745fbf-gf2b8     1.7.4
 reviews-v2-58d564d4db-chxcr.demoapp                                SYNCED     SYNCED     SYNCED     SYNCED     NOT SENT     istiod-5c8f745fbf-gf2b8     1.7.4
 reviews-v3-55545c459b-wgq4k.demoapp                                SYNCED     SYNCED     SYNCED     SYNCED     NOT SENT     istiod-5c8f745fbf-gf2b8     1.7.4
+```
+
+## Instalando o Istio Operator
+
+### Baixando o fonte
+
+```
+curl -L https://istio.io/downloadIstio | ISTIO_VERSION=1.14.6 TARGET_ARCH=x86_64 sh -
+```
+
+```
+cd istio-1.14.6/
+export PATH=$PWD/bin:$PATH
+```
+
+### Instalando o Istio Operator
+
+```
+kubectl create namespace istio-operator
+```
+
+- Importante: Como o gateway já está no namespace do control plane o watchedNamespaces aqui só contem um namespace, caso o gateway estivesse em outro precisaríamos incrementar esta lista
+
+```
+helm upgrade --install istio-operator manifests/charts/istio-operator -n istio-operator --set revision=1-14-6 --set watchedNamespaces=istio-system
+```
+
+### Configurando o control plane
+
+- Primeiramente vamos parar o BanzaiOperator, já que ele atua diferente do Istio Operator e gera conflito em alguns momentos
+
+```
+kubectl scale statefulset -n istio-system istio-operator --replicas=0
+```
+
+- Exemplo de config do control plane
+
+```
+
 ```
