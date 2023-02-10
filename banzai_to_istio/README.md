@@ -114,3 +114,30 @@ curl -I $IP/productpage
 ```
 
 ### Output
+
+```
+root@k8s-master01:~/istio-1.14.6# IP=$(kubectl -n istio-system get svc istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+root@k8s-master01:~/istio-1.14.6# curl -I $IP/productpage
+HTTP/1.1 200 OK
+content-type: text/html; charset=utf-8
+content-length: 5290
+server: istio-envoy
+date: Fri, 10 Feb 2023 13:44:31 GMT
+x-envoy-upstream-service-time: 418
+
+root@k8s-master01:~/istio-1.14.6# kubectl get services -n istio-system
+NAME                       TYPE           CLUSTER-IP      EXTERNAL-IP    PORT(S)                                                      AGE
+istio-ingressgateway       LoadBalancer   10.98.199.220   192.168.10.5   15021:31655/TCP,80:30714/TCP,443:30577/TCP,15443:31782/TCP   4m52s
+istio-operator             ClusterIP      10.106.45.167   <none>         443/TCP                                                      5m31s
+istio-operator-authproxy   ClusterIP      10.111.223.83   <none>         8443/TCP                                                     5m31s
+istiod                     ClusterIP      10.103.213.70   <none>         15010/TCP,15012/TCP,443/TCP,15014/TCP,853/TCP                5m4s
+root@k8s-master01:~/istio-1.14.6# istioctl proxy-status
+NAME                                                   CLUSTER     CDS        LDS        EDS        RDS        ECDS         ISTIOD                      VERSION
+details-v1-6758dd9d8d-nlhjg.demoapp                                SYNCED     SYNCED     SYNCED     SYNCED     NOT SENT     istiod-5c8f745fbf-gf2b8     1.7.4
+istio-ingressgateway-5b8cbc6d49-4nkb6.istio-system                 SYNCED     SYNCED     SYNCED     SYNCED     NOT SENT     istiod-5c8f745fbf-gf2b8     1.7.4
+productpage-v1-775bf8d9f-8jlnz.demoapp                             SYNCED     SYNCED     SYNCED     SYNCED     NOT SENT     istiod-5c8f745fbf-gf2b8     1.7.4
+ratings-v1-f849dc6d-99fdl.demoapp                                  SYNCED     SYNCED     SYNCED     SYNCED     NOT SENT     istiod-5c8f745fbf-gf2b8     1.7.4
+reviews-v1-74fb8fdbd8-n5sw4.demoapp                                SYNCED     SYNCED     SYNCED     SYNCED     NOT SENT     istiod-5c8f745fbf-gf2b8     1.7.4
+reviews-v2-58d564d4db-chxcr.demoapp                                SYNCED     SYNCED     SYNCED     SYNCED     NOT SENT     istiod-5c8f745fbf-gf2b8     1.7.4
+reviews-v3-55545c459b-wgq4k.demoapp                                SYNCED     SYNCED     SYNCED     SYNCED     NOT SENT     istiod-5c8f745fbf-gf2b8     1.7.4
+```
