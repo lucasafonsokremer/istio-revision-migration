@@ -357,7 +357,6 @@ EOF
 - Exemplo de config do Gateway
 
 ```
-kubectl apply -f - <<EOF
 ########################################################################################### 
 # This is an Istio custom configuration file for PRODUCTION-LEVEL installations           # 
 # https://istio.io/latest/docs/reference/config/istio.mesh.v1alpha1/                      # 
@@ -394,6 +393,15 @@ spec:
           version: 1-14-6
         k8s:
           overlays:
+          - apiVersion: v1
+            kind: Service
+            name: istio-ingressgateway-1-14-6
+            patches:
+            - path: spec.selector
+              value:
+                app: istio-ingressgateway
+                istio: ingressgateway
+                service.istio.io/canonical-name: ingressgateway-1-14-6  
           - apiVersion: apps/v1
             kind: Deployment
             name: istio-ingressgateway-1-14-6
@@ -447,5 +455,4 @@ spec:
               - name: tls  
                 port: 15443  
                 targetPort: 15443
-EOF
 ```
