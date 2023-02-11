@@ -207,6 +207,7 @@ kubectl scale statefulset -n istio-system istio-operator --replicas=0
 - Exemplo de config do control plane
 
 ```
+kubectl apply -f - <<EOF
 ########################################################################################### 
 # This is an Istio custom configuration file for PRODUCTION-LEVEL installations           # 
 # https://istio.io/latest/docs/reference/config/istio.mesh.v1alpha1/                      # 
@@ -350,10 +351,101 @@ spec:
     # Istio CNI feature
     cni:
       enabled: false
+EOF
 ```
 
 - Exemplo de config do Gateway
 
 ```
+kubectl apply -f - <<EOF
+########################################################################################### 
+# This is an Istio custom configuration file for PRODUCTION-LEVEL installations           # 
+# https://istio.io/latest/docs/reference/config/istio.mesh.v1alpha1/                      # 
+# https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/                  # 
+# https://istio.io/latest/docs/setup/upgrade/canary/                                      # 
+#                                                                                         # 
+###########################################################################################
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+metadata:
+  name: istio-ingressgateway-1-14-6
+  namespace: istio-system
+spec:
+  # Only the control plane components are installed (https://istio.io/latest/docs/setup/additional-setup/config-profiles/)
+  profile: empty
+  # root registry url
+  #hub: "your-registry-url/istio"
+  # Version for docker image
+  tag: 1.14.6
+  # Revision is set as 'version' label and part of the resource names when installing multiple control planes.
+  # When using revision-based upgrades jumping across two minor versions is supported (e.g. upgrading directly from version 1.8 to 1.10)
+  # This is in contrast to in-place upgrades where it is required to upgrade to each intermediate minor release.
+  # You must replace . characters in the revision name, for example, revision=1-6-8 for Istio 1.6.8, because . is not a valid revision name character.
+  revision: 1-14-6
 
+  # Ingress Gateway section
+  components:
+    ingressGateways:
+      - name: istio-ingressgateway-1-14-6
+        namespace: istio-system
+        enabled: true
+        label:
+          istio: ingressgateway-1-14-6
+          version: 1-14-6
+        k8s:
+          overlays:
+          - apiVersion: apps/v1
+            kind: Deployment
+            name: istio-ingressgateway-1-14-6
+            patches:
+              # Schedule pods on separate nodes if possible
+              - path: spec.template.spec.affinity
+                value:
+                  podAntiAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - podAffinityTerm:
+                        labelSelector:
+                          matchExpressions:
+                          - key: app
+                            operator: In
+                            values:
+                              - istio-ingressgateway
+                        topologyKey: kubernetes.io/hostname
+                      weight: 100
+              - path: spec.template.metadata.labels  
+                value: 
+                  app: istio-ingressgateway
+                  gateway-name: istio-ingressgateway
+                  gateway-type: ingress
+                  istio: ingressgateway
+                  istio.io/rev: 1-14-6
+              - path: spec.selector.matchLabels
+                value:
+                  app: istio-ingressgateway
+                  gateway-name: istio-ingressgateway
+                  gateway-type: ingress
+                  istio: ingressgateway
+                  istio.io/rev: 1-14-6
+
+          service:  
+            # Since we created our own LoadBalanced service, tell istio to create a ClusterIP service for this gateway  
+            type: ClusterIP  
+            # match the LoadBalanced Service  
+            ports:  
+              - name: status-port  
+                port: 15021  
+                targetPort: 15021  
+              - name: http2  
+                port: 80  
+                targetPort: 8080  
+              - name: https  
+                port: 443  
+                targetPort: 8443  
+              - name: tcp  
+                port: 31400  
+                targetPort: 31400  
+              - name: tls  
+                port: 15443  
+                targetPort: 15443
+EOF
 ```
