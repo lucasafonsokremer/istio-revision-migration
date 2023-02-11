@@ -357,6 +357,7 @@ EOF
 - Exemplo de config do Gateway
 
 ```
+kubectl apply -f - <<EOF
 ########################################################################################### 
 # This is an Istio custom configuration file for PRODUCTION-LEVEL installations           # 
 # https://istio.io/latest/docs/reference/config/istio.mesh.v1alpha1/                      # 
@@ -455,4 +456,5 @@ spec:
               - name: tls  
                 port: 15443  
                 targetPort: 15443
+EOF
 ```
