@@ -390,8 +390,9 @@ spec:
         namespace: istio-system
         enabled: true
         label:
-          istio: ingressgateway-1-14-6
+          istio: ingressgateway
           version: 1-14-6
+          app: istio-ingressgateway
         k8s:
           # Pod environment variables
           env:
@@ -444,20 +445,6 @@ spec:
                               - istio-ingressgateway
                         topologyKey: kubernetes.io/hostname
                       weight: 100
-              - path: spec.template.metadata.labels  
-                value: 
-                  app: istio-ingressgateway
-                  gateway-name: istio-ingressgateway
-                  gateway-type: ingress
-                  istio: ingressgateway
-                  istio.io/rev: 1-14-6
-              - path: spec.selector.matchLabels
-                value:
-                  app: istio-ingressgateway
-                  gateway-name: istio-ingressgateway
-                  gateway-type: ingress
-                  istio: ingressgateway
-                  istio.io/rev: 1-14-6
 
           # Scale pods on specific node group
           #tolerations:
@@ -487,4 +474,28 @@ spec:
                 port: 15443  
                 targetPort: 15443
 EOF
+```
+
+- Output
+
+```
+root@k8s-master01:~/istio-1.14.6# kubectl get services -n istio-system
+NAME                          TYPE           CLUSTER-IP      EXTERNAL-IP    PORT(S)                                                      AGE
+istio-ingressgateway          LoadBalancer   10.98.199.220   192.168.10.5   15021:31655/TCP,80:30714/TCP,443:30577/TCP,15443:31782/TCP   24h
+istio-ingressgateway-1-14-6   ClusterIP      10.99.222.146   <none>         15021/TCP,80/TCP,443/TCP,31400/TCP,15443/TCP                 91s
+istio-operator                ClusterIP      10.106.45.167   <none>         443/TCP                                                      24h
+istio-operator-authproxy      ClusterIP      10.111.223.83   <none>         8443/TCP                                                     24h
+istiod                        ClusterIP      10.103.213.70   <none>         15010/TCP,15012/TCP,443/TCP,15014/TCP,853/TCP                24h
+istiod-1-14-6                 ClusterIP      10.101.50.154   <none>         15010/TCP,15012/TCP,443/TCP,15014/TCP                        29m
+root@k8s-master01:~/istio-1.14.6# kubectl describe services -n istio-system istio-ingressgateway | grep Selector
+Selector:                 app=istio-ingressgateway,gateway-name=istio-ingressgateway,gateway-type=ingress,istio.io/rev=istio-operator.istio-system,istio=ingressgateway
+root@k8s-master01:~/istio-1.14.6# kubectl describe services -n istio-system istio-ingressgateway-1-14-6 | grep Selector
+Selector:          app=istio-ingressgateway,istio=ingressgateway-1-14-6,version=1-14-6
+root@k8s-master01:~/istio-1.14.6#
+```
+
+- Teste do gateway novo
+
+```
+
 ```
