@@ -426,6 +426,14 @@ spec:
             kind: Deployment
             name: istio-ingressgateway-1-14-6
             patches:
+              # Sleep 25s on pod shutdown to allow connections to drain
+              - path: spec.template.spec.containers.[name:istio-proxy].lifecycle
+                value:
+                  preStop:
+                    exec:
+                      command:
+                      - sleep
+                      - "15"
               # Schedule pods on separate nodes if possible
               - path: spec.template.spec.affinity
                 value:
