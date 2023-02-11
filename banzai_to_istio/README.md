@@ -497,5 +497,21 @@ root@k8s-master01:~/istio-1.14.6#
 - Teste do gateway novo
 
 ```
+root@k8s-master01:~/istio-1.14.6# kubectl port-forward -n istio-system svc/istio-ingressgateway-1-14-6 8080:80 &
+[1] 67716
+root@k8s-master01:~/istio-1.14.6# Forwarding from 127.0.0.1:8080 -> 8080
+Forwarding from [::1]:8080 -> 8080
 
+root@k8s-master01:~/istio-1.14.6# curl -I http://127.0.0.1:8080/productpage
+Handling connection for 8080
+HTTP/1.1 200 OK
+content-type: text/html; charset=utf-8
+content-length: 5290
+server: istio-envoy
+date: Sat, 11 Feb 2023 15:00:41 GMT
+x-envoy-upstream-service-time: 26
+
+root@k8s-master01:~/istio-1.14.6#
 ```
+
+- Rollout do novo gateway
