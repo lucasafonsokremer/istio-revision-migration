@@ -517,4 +517,75 @@ x-envoy-upstream-service-time: 26
 root@k8s-master01:~/istio-1.14.6#
 ```
 
+- Rollout do dataplane
+
+```
+kubectl label namespace demoapp istio-injection- ; kubectl label namespace demoapp istio.io/rev=1-14-6
+```
+
+```
+kubectl rollout restart deployment -n demoapp details-v1 productpage-v1 ratings-v1 reviews-v1 reviews-v2 reviews-v3
+```
+
+- Validar o dataplane
+
+```
+istioctl proxy-status
+```
+
+```
+NAME                                                         CLUSTER        CDS        LDS        EDS        RDS        ECDS         ISTIOD                             VERSION
+details-v1-86977bd4cb-spv86.demoapp                          Kubernetes     SYNCED     SYNCED     SYNCED     SYNCED     NOT SENT     istiod-1-14-6-588dc5d7bb-nq7tt     1.14.6
+istio-ingressgateway-1-14-6-5d4749f6f-6dd26.istio-system     Kubernetes     SYNCED     SYNCED     SYNCED     SYNCED     NOT SENT     istiod-1-14-6-588dc5d7bb-zpws4     1.14.6
+istio-ingressgateway-1-14-6-5d4749f6f-kj6b2.istio-system     Kubernetes     SYNCED     SYNCED     SYNCED     SYNCED     NOT SENT     istiod-1-14-6-588dc5d7bb-zpws4     1.14.6
+productpage-v1-674d6d998-lh48z.demoapp                       Kubernetes     SYNCED     SYNCED     SYNCED     SYNCED     NOT SENT     istiod-1-14-6-588dc5d7bb-nq7tt     1.14.6
+ratings-v1-5d8888fbb4-gqbld.demoapp                          Kubernetes     SYNCED     SYNCED     SYNCED     SYNCED     NOT SENT     istiod-1-14-6-588dc5d7bb-zpws4     1.14.6
+reviews-v1-6747675756-vcw95.demoapp                          Kubernetes     SYNCED     SYNCED     SYNCED     SYNCED     NOT SENT     istiod-1-14-6-588dc5d7bb-nq7tt     1.14.6
+reviews-v2-74d6994f4b-b4xmj.demoapp                          Kubernetes     SYNCED     SYNCED     SYNCED     SYNCED     NOT SENT     istiod-1-14-6-588dc5d7bb-zpws4     1.14.6
+reviews-v3-6d4d5d9b5b-75lgd.demoapp                          Kubernetes     SYNCED     SYNCED     SYNCED     SYNCED     NOT SENT     istiod-1-14-6-588dc5d7bb-zpws4     1.14.6
+```
+
 - Rollout do novo gateway
+
+```
+apiVersion: v1
+kind: Service
+metadata:
+  name: istio-ingressgateway
+  namespace: istio-system
+  labels:
+    app: istio-ingressgateway
+    gateway-name: istio-ingressgateway
+    gateway-type: ingress
+    istio: ingressgateway
+    istio.io/rev: 1-14-6
+spec:
+  type: LoadBalancer
+  selector:
+    app: istio-ingressgateway
+    istio: ingressgateway
+    # select the 1-14-6 revision
+    version: 1-14-6
+  ports:  
+    - name: status-port  
+      port: 15021  
+      targetPort: 15021  
+    - name: http2  
+      port: 80  
+      targetPort: 8080  
+    - name: https  
+      port: 443  
+      targetPort: 8443  
+    - name: tcp  
+      port: 31400  
+      targetPort: 31400  
+    - name: tls  
+      port: 15443  
+      targetPort: 15443
+```
+
+### Remover Banzaioperator
+
+```
+
+```
