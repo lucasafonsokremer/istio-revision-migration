@@ -394,15 +394,6 @@ spec:
           version: 1-14-6
         k8s:
           overlays:
-          - apiVersion: v1
-            kind: Service
-            name: istio-ingressgateway-1-14-6
-            patches:
-            - path: spec.selector
-              value:
-                app: istio-ingressgateway
-                istio: ingressgateway
-                service.istio.io/canonical-name: ingressgateway-1-14-6  
           - apiVersion: apps/v1
             kind: Deployment
             name: istio-ingressgateway-1-14-6
