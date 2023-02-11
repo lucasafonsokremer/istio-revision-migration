@@ -207,5 +207,153 @@ kubectl scale statefulset -n istio-system istio-operator --replicas=0
 - Exemplo de config do control plane
 
 ```
+########################################################################################### 
+# This is an Istio custom configuration file for PRODUCTION-LEVEL installations           # 
+# https://istio.io/latest/docs/reference/config/istio.mesh.v1alpha1/                      # 
+# https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/                  # 
+# https://istio.io/latest/docs/setup/upgrade/canary/                                      # 
+#                                                                                         # 
+###########################################################################################
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+metadata:
+  name: istio-control-plane-1-14-6
+  namespace: istio-system
+spec:
+  # Only the control plane components are installed (https://istio.io/latest/docs/setup/additional-setup/config-profiles/)
+  profile: minimal
+  # root registry url
+  #hub: "your-registry-url/istio"
+  # Version for docker image
+  tag: 1.14.6
+  # Revision is set as 'version' label and part of the resource names when installing multiple control planes.
+  # When using revision-based upgrades jumping across two minor versions is supported (e.g. upgrading directly from version 1.8 to 1.10)
+  # This is in contrast to in-place upgrades where it is required to upgrade to each intermediate minor release.
+  # You must replace . characters in the revision name, for example, revision=1-6-8 for Istio 1.6.8, because . is not a valid revision name character.
+  revision: 1-14-6
+
+  # meshConfig defines runtime configuration of components, including istiod and istio-agent behavior
+  meshConfig:
+    # File address for the proxy access log
+    accessLogFile: "/dev/stdout"
+    # Flag to control generation of trace spans and request IDs
+    enableTracing: true
+    defaultConfig:
+      # The amount of time allowed for connections to complete on proxy shutdown
+      terminationDrainDuration: "15s"
+      # Tracing section
+      # sampling = The percentage of requests (0.0 - 100.0) that will be randomly selected for trace generation
+      # Reporting trace data in zipkin format to jaeger collector
+      # https://www.jaegertracing.io/docs/1.6/getting-started/
+      # This settings are move to meshConfig since istio 1.6.0
+      # https://istio.io/latest/docs/tasks/observability/distributed-tracing/mesh-and-proxy-config/#customizing-trace-sampling
+      tracing:
+        sampling: "100.0"
+        zipkin:
+          address: "zipkin.istio-system:9411"
+
+    # Set the default behavior of the sidecar for handling outbound traffic from the application
+    outboundTrafficPolicy:
+      mode: ALLOW_ANY
+
+  # Specify global behavior
+  # https://istio.io/v1.5/docs/reference/config/installation-options/#global-options
+  values:
+    global:
+      imagePullPolicy: "IfNotPresent"
+      # Sidecar resource settings
+      proxy:
+        # The Istio load tests mesh consists of 1000 services and 2000 sidecars with 70,000 mesh-wide requests
+        # per second and istio-proxy used 0.35 vCPU and 40 MB memory per 1000 requests per second.
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 2000m
+            memory: 1024Mi
+        logLevel: warning
+
+  # Traffic management feature
+  components:
+    pilot:
+      enabled: true
+      k8s:
+        # Recommended to be >1 in production
+        replicaCount: 2
+        # The Istio load tests mesh consists of 1000 services and 2000 sidecars with 70,000 mesh-wide
+        # requests per second and Istiod used 1 vCPU and 1.5 GB of memory.
+        resources:
+          requests:
+            cpu: 200m
+            memory: 200Mi
+          limits:
+            memory: 3072Mi
+        strategy:
+          rollingUpdate:
+            maxSurge: 100%
+            maxUnavailable: 25%                
+        # Recommended to scale istiod under load
+        hpaSpec:
+          maxReplicas: 5
+          minReplicas: 2
+          scaleTargetRef:
+            apiVersion: apps/v1
+            kind: Deployment
+            # matches the format istiod-<revision_label>
+            name: istiod-1-14-6
+          metrics:
+            - resource:
+                name: cpu
+                targetAverageUtilization: 60
+              type: Resource
+
+        # Schedule pods on separate nodes if possible
+        overlays:
+          - apiVersion: apps/v1
+            kind: Deployment
+            # matches the format istiod-<revision_label>
+            name: istiod-1-14-6
+            patches:
+              - path: spec.template.spec.affinity
+                value:
+                  podAntiAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - podAffinityTerm:
+                        labelSelector:
+                          matchExpressions:
+                          - key: app
+                            operator: In
+                            values:
+                            - istiod
+                        topologyKey: kubernetes.io/hostname
+                      weight: 100
+
+        # Scale pods on specific node group
+        #tolerations:
+        #  - key: "istio"
+        #    operator: "Equal"
+        #    value: "istio-ingress"
+        #    effect: "NoSchedule"
+
+    # Istio Gateway feature
+    # Disable gateways deployments, which are deployed in separate IstioOperator configurations
+    ingressGateways:
+    - name: istio-ingressgateway
+      enabled: false
+    - name: istio-eastwestgateway
+      enabled: false
+    egressGateways:
+    - name: istio-egressgateway
+      enabled: false
+
+    # Istio CNI feature
+    cni:
+      enabled: false
+```
+
+- Exemplo de config do Gateway
+
+```
 
 ```
