@@ -393,6 +393,38 @@ spec:
           istio: ingressgateway-1-14-6
           version: 1-14-6
         k8s:
+          # Pod environment variables
+          env:
+            # Set drain duration to configure envoy gracefull shutdown
+            - name: TERMINATION_DRAIN_DURATION_SECONDS
+              value: "15"
+
+          # Hardware and scaling spec
+          hpaSpec:
+            maxReplicas: 5
+            metrics:
+              - resource:
+                  name: cpu
+                  targetAverageUtilization: 60
+                type: Resource
+            minReplicas: 2
+            scaleTargetRef:
+              apiVersion: apps/v1
+              kind: Deployment
+              name: istio-ingressgateway-1-14-6
+          strategy:
+            rollingUpdate:
+              maxSurge: 100%
+              maxUnavailable: 25%
+          resources:
+            limits:
+              cpu: 2000m
+              memory: 1024Mi
+            requests:
+              cpu: 300m
+              memory: 256Mi
+
+          # Overlay some values
           overlays:
           - apiVersion: apps/v1
             kind: Deployment
@@ -426,6 +458,13 @@ spec:
                   gateway-type: ingress
                   istio: ingressgateway
                   istio.io/rev: 1-14-6
+
+          # Scale pods on specific node group
+          #tolerations:
+          #  - key: "istio"
+          #    operator: "Equal"
+          #    value: "istio-ingress"
+          #    effect: "NoSchedule"
 
           service:  
             # Since we created our own LoadBalanced service, tell istio to create a ClusterIP service for this gateway  
