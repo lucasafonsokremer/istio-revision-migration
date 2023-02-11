@@ -403,11 +403,6 @@ spec:
           # Hardware and scaling spec
           hpaSpec:
             maxReplicas: 5
-            metrics:
-              - resource:
-                  name: cpu
-                  targetAverageUtilization: 60
-                type: Resource
             minReplicas: 2
             scaleTargetRef:
               apiVersion: apps/v1
