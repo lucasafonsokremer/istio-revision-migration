@@ -609,6 +609,22 @@ spec:
 
 ### Remover Banzaioperator
 
-```
+- Remover operator
 
 ```
+kubectl delete istios.istio.banzaicloud.io -n istio-system istio-operator
+```
+
+**OBSERVAÇÃO: Ao remover desta forma, o gateway antigo continuou em execução, acreditamos que seja pelo fato de existir o service do gateway, que agora está em uso pela nova versão do Istio**
+
+- Removendo o gateway
+
+```
+kubectl delete deployment istio-ingressgateway -n istio-system
+```
+
+- O service istio-ingressgateway não pode ser removido, caso contrário balanceadores de carga e demais componentes devem perder o vínculo ao cluster e teremos downtime.
+
+## Importante
+
+- No service istio-ingressgateway foram removidas algumas annotations de owner do banzai por garantia, antes do processo de remoção do operator banzai
