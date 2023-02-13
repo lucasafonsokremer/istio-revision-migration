@@ -27,6 +27,27 @@ kubectl -n istio-system get  deployment  istiod-1-14-6 -o yaml | grep  -A 2 'nam
 kubectl port-forward svc/tracing 80:80 -n istio-system --address=0.0.0.0 &
 ```
 
+## Resultado do teste de carga durante a migração
+
+- Todo o processo descrito abaixo visa uma migração com downtime zero
+
+```
+root@k8s-master01:~# echo "GET http://192.168.10.5/productpage" | vegeta attack -rate=10 | vegeta report
+Requests      [total, rate, throughput]         6175, 10.00, 10.00
+Duration      [total, attack, wait]             10m17s, 10m17s, 14.879ms
+Latencies     [min, mean, 50, 90, 95, 99, max]  10.547ms, 15.018ms, 14.452ms, 17.922ms, 20.185ms, 27.827ms, 47.22ms
+Bytes In      [total, mean]                     30625179, 4959.54
+Bytes Out     [total, mean]                     0, 0.00
+Success       [ratio]                           100.00%
+Status Codes  [code:count]                      200:6175  
+Error Set:
+```
+
+## Modelo para atingir a migração com zero downtime
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/nmnellis/istio-upgrade-demo/main/production-istio_gateways.png"/>
+</p>
 
 
 ## Instalando e configurando o ambiente com Banzaioperator
@@ -546,6 +567,8 @@ reviews-v3-6d4d5d9b5b-75lgd.demoapp                          Kubernetes     SYNC
 ```
 
 - Rollout do novo gateway
+
+**OBSERVAÇÃO: Este é um exemplo de service, não pode ser feito o apply do mesmo já que o banzai insere alguns campos extras. Se for feito o apply exatamente como está aqui vamos receber timeout pois o selector ficará errado. É necessário dar edit no service e alterar, os próximos upgrades via istio-operator podem ser feitas via apply, já que vamos utilizar apenas estas labels.**
 
 ```
 apiVersion: v1
